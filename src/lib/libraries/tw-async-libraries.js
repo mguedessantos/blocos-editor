@@ -1,15 +1,9 @@
-// blocos: a nossa biblioteca (de /editor-assets/library) vem primeiro, seguida da do TurboWarp.
-// Os arquivos da nossa ficam marcados em window.__BLOCOS_OURS__ (servidos pelo site); os outros vêm do servidor de arte do Scratch.
+// blocos: a nossa biblioteca (de /editor-assets/library) vem primeiro, seguida da original.
+// Todos os arquivos ficam em /editor-assets (npm run editor:mirror no site).
 const blocosLibrary = (name, builtin) => Promise.all([
     fetch(`/editor-assets/library/${name}.json`).then(r => r.json()),
     builtin().then(mod => mod.default)
-]).then(([ours, theirs]) => {
-    const marks = window.__BLOCOS_OURS__ || (window.__BLOCOS_OURS__ = new Set());
-    const mark = item => [item, ...(item.costumes || []), ...(item.sounds || [])]
-        .forEach(a => a.assetId && marks.add(a.assetId));
-    ours.forEach(mark);
-    return ours.concat(theirs);
-});
+]).then(([ours, theirs]) => ours.concat(theirs));
 const asyncLibrary = (callback, name) => {
     let data = null;
     return () => {

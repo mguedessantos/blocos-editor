@@ -8,7 +8,9 @@ Blocos (`window.__BLOCOS__`, entrada `src/playground/blocos.jsx`):
 
 - ponte de mensagens com o site (`src/lib/blocos-bridge.js`): carregar o projeto da lição, filtrar os blocos da paleta e devolver o projeto (.sb3);
 - idioma pela URL, cor roxa, sem itens de comunidade, conta, configurações avançadas e "Novo";
-- bibliotecas de atores, cenários e sons: a da plataforma primeiro, seguida da original;
+- bibliotecas de atores, cenários e sons: a da plataforma primeiro, seguida da original. Todos os arquivos
+  (inclusive os da biblioteca original do Scratch) são servidos pelo próprio site, em `/editor-assets`,
+  para que o navegador dos alunos não acesse servidores de terceiros;
 - palco pequeno automático e sem tamanho mínimo, para caber na janela.
 
 Scratch é um projeto do Scratch Foundation. Este editor não é afiliado ao Scratch nem ao TurboWarp.

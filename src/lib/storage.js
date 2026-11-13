@@ -55,9 +55,9 @@ class Storage extends ScratchStorage {
         this.assetHost = assetHost;
     }
     getAssetGetConfig (asset) {
-        if (window.__BLOCOS__ && window.__BLOCOS_OURS__ && window.__BLOCOS_OURS__.has(asset.assetId)) {
-            return `/editor-assets/${asset.assetId}.${asset.dataFormat}`;
-        }
+        // blocos: toda a arte (nossa e da biblioteca original) é servida pelo próprio site (LGPD)
+        // endereço completo: os downloads rodam num worker, que não resolve caminhos relativos
+        if (window.__BLOCOS__) return `${location.origin}/editor-assets/${asset.assetId}.${asset.dataFormat}`;
         return `${this.assetHost}/internalapi/asset/${asset.assetId}.${asset.dataFormat}/get/`;
     }
     getAssetCreateConfig (asset) {

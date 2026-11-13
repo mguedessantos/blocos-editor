@@ -138,8 +138,7 @@ class LibraryItem extends React.PureComponent {
     }
     render () {
         const iconMd5 = this.curIconMd5();
-        const ours = window.__BLOCOS_OURS__ && window.__BLOCOS_OURS__.has(String(iconMd5).split('.')[0]);
-        const iconURL = iconMd5 ? (ours ?
+        const iconURL = iconMd5 ? (window.__BLOCOS__ ?
             `/editor-assets/${iconMd5}` :
             `https://cdn.assets.scratch.mit.edu/internalapi/asset/${iconMd5}/get/`) :
             this.props.iconRawURL;
