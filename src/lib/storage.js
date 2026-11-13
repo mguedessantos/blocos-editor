@@ -55,6 +55,9 @@ class Storage extends ScratchStorage {
         this.assetHost = assetHost;
     }
     getAssetGetConfig (asset) {
+        if (window.__BLOCOS__ && window.__BLOCOS_OURS__ && window.__BLOCOS_OURS__.has(asset.assetId)) {
+            return `/editor-assets/${asset.assetId}.${asset.dataFormat}`;
+        }
         return `${this.assetHost}/internalapi/asset/${asset.assetId}.${asset.dataFormat}/get/`;
     }
     getAssetCreateConfig (asset) {

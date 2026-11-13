@@ -15,6 +15,11 @@ export const LANGUAGE_KEY = 'tw:language';
  * @return {string} the preferred locale
  */
 const detectLocale = supportedLocales => {
+    // blocos: o idioma da URL (?locale=pt-br) vale mais que o salvo no navegador
+    const urlParams = queryString.parse(location.search);
+    const fromUrl = [].concat(urlParams.locale, urlParams.lang).filter(l => l)[0];
+    if (fromUrl && supportedLocales.includes(fromUrl.toLowerCase())) return fromUrl.toLowerCase();
+
     // tw: read language from localStorage
     try {
         const storedLanguage = localStorage.getItem(LANGUAGE_KEY);

@@ -348,7 +348,7 @@ class LibraryComponent extends React.Component {
                             {filteredData.length > 0 && (
                                 <Separator />
                             )}
-                            <RemovedTrademarks />
+                            {!window.__BLOCOS__ && <RemovedTrademarks />}
                         </React.Fragment>
                     )}
                     {!filteredData && (

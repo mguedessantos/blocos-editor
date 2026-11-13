@@ -304,3 +304,18 @@ module.exports = [
             ])
         })) : []
 );
+
+// Blocos: build só do editor das lições (BLOCOS=1 ROOT=/editor/ npm run build)
+if (process.env.BLOCOS) {
+    const editor = module.exports[0];
+    editor.entry = {blocos: './src/playground/blocos.jsx'};
+    editor.plugins = editor.plugins.filter(p => !(p instanceof HtmlWebpackPlugin)).concat(new HtmlWebpackPlugin({
+        chunks: ['blocos'],
+        template: 'src/playground/index.ejs',
+        filename: 'index.html',
+        title: APP_NAME,
+        isEditor: true,
+        ...htmlWebpackPluginCommon
+    }));
+    module.exports = [editor];
+}

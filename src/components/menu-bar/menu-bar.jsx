@@ -32,7 +32,6 @@ import FramerateChanger from '../../containers/tw-framerate-changer.jsx';
 import ChangeUsername from '../../containers/tw-change-username.jsx';
 import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
 import TWSaveStatus from './tw-save-status.jsx';
-import TWNews from './tw-news.jsx';
 
 import {openTipsLibrary, openSettingsModal, openRestorePointModal} from '../../reducers/modals';
 import {setPlayer} from '../../reducers/mode';
@@ -106,7 +105,6 @@ import sharedMessages from '../../lib/shared-messages';
 
 import SeeInsideButton from './tw-see-inside.jsx';
 import {notScratchDesktop} from '../../lib/isScratchDesktop.js';
-import {APP_NAME} from '../../lib/brand.js';
 
 const ariaMessages = defineMessages({
     tutorials: {
@@ -516,22 +514,6 @@ class MenuBar extends React.Component {
                                     place={this.props.isRtl ? 'left' : 'right'}
                                 >
                                     <MenuSection>
-                                        <MenuItemLink href="https://scratch.mit.edu/users/GarboMuffin/#comments">
-                                            <FormattedMessage
-                                                defaultMessage="Some scripts encountered errors."
-                                                description="Link in error menu"
-                                                id="tw.menuBar.reportError1"
-                                            />
-                                        </MenuItemLink>
-                                        <MenuItemLink href="https://scratch.mit.edu/users/GarboMuffin/#comments">
-                                            <FormattedMessage
-                                                defaultMessage="This is a bug. Please report it."
-                                                description="Link in error menu"
-                                                id="tw.menuBar.reportError2"
-                                            />
-                                        </MenuItemLink>
-                                    </MenuSection>
-                                    <MenuSection>
                                         {this.props.errors.map(({id, sprite, error}) => (
                                             <MenuItem key={id}>
                                                 {this.props.intl.formatMessage(twMessages.compileError, {
@@ -591,12 +573,14 @@ class MenuBar extends React.Component {
                                     open={this.props.fileMenuOpen}
                                     place={this.props.isRtl ? 'left' : 'right'}
                                 >
+                                    {!window.__BLOCOS__ && (
                                     <MenuItem
                                         isRtl={this.props.isRtl}
                                         onClick={this.handleClickNew}
                                     >
                                         {newProjectMessage}
                                     </MenuItem>
+                                    )}
                                     {this.props.onClickNewWindow && (
                                         <MenuItem
                                             isRtl={this.props.isRtl}
@@ -791,7 +775,7 @@ class MenuBar extends React.Component {
                                             )}
                                         </MenuItem>
                                     )}</FramerateChanger>
-                                    <ChangeUsername>{changeUsername => (
+                                    {!window.__BLOCOS__ && (<React.Fragment><ChangeUsername>{changeUsername => (
                                         <MenuItem onClick={changeUsername}>
                                             <FormattedMessage
                                                 defaultMessage="Change Username"
@@ -828,9 +812,9 @@ class MenuBar extends React.Component {
                                                 />
                                             )}
                                         </MenuItem>
-                                    )}</CloudVariablesToggler>
+                                    )}</CloudVariablesToggler></React.Fragment>)}
                                 </MenuSection>
-                                <MenuSection>
+                                {!window.__BLOCOS__ && (<MenuSection>
                                     <MenuItem onClick={this.props.onClickSettingsModal}>
                                         <FormattedMessage
                                             defaultMessage="Advanced Settings"
@@ -838,7 +822,7 @@ class MenuBar extends React.Component {
                                             id="tw.menuBar.moreSettings"
                                         />
                                     </MenuItem>
-                                </MenuSection>
+                                </MenuSection>)}
                             </MenuBarMenu>
                         </MenuLabel>
                         {this.props.isTotallyNormal && (
@@ -905,7 +889,7 @@ class MenuBar extends React.Component {
                                 </span>
                             </div>
                         )}
-                        {this.props.onClickSettingsModal && (
+                        {this.props.onClickSettingsModal && !window.__BLOCOS__ && (
                             <div
                                 className={classNames(styles.menuBarItem, styles.hoverable)}
                                 onClick={this.props.onClickSettingsModal}
@@ -1011,27 +995,6 @@ class MenuBar extends React.Component {
                             />
                         ) : []))}
                     </div>
-                    {/* tw: add a feedback button */}
-                    <div className={styles.menuBarItem}>
-                        <a
-                            className={styles.feedbackLink}
-                            href="https://scratch.mit.edu/users/GarboMuffin/#comments"
-                            rel="noopener noreferrer"
-                            target="_blank"
-                        >
-                            {/* todo: icon */}
-                            <Button className={styles.feedbackButton}>
-                                <FormattedMessage
-                                    defaultMessage="{APP_NAME} Feedback"
-                                    description="Button to give feedback in the menu bar"
-                                    id="tw.feedbackButton"
-                                    values={{
-                                        APP_NAME
-                                    }}
-                                />
-                            </Button>
-                        </a>
-                    </div>
                 </div>
 
                 <div className={styles.accountInfoGroup}>
@@ -1047,7 +1010,6 @@ class MenuBar extends React.Component {
         return (
             <React.Fragment>
                 {menuBar}
-                <TWNews />
             </React.Fragment>
         );
     }

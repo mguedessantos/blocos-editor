@@ -227,7 +227,7 @@ const GUIComponent = props => {
             <Box
                 className={styles.pageWrapper}
                 dir={isRtl ? 'rtl' : 'ltr'}
-                style={{
+                style={window.__BLOCOS__ ? {minWidth: 0, minHeight: 0} : {
                     minWidth: 1024 + Math.max(0, customStageSize.width - 480),
                     minHeight: 640 + Math.max(0, customStageSize.height - 360)
                 }}
