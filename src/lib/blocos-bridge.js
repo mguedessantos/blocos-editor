@@ -38,7 +38,20 @@ export const setupBridge = vm => {
     let changeTimer = null;
     vm.on('PROJECT_CHANGED', () => {
         clearTimeout(changeTimer);
-        changeTimer = setTimeout(() => send({type: 'changed'}), 1500);
+        changeTimer = setTimeout(() => {
+            changeTimer = null;
+            send({type: 'changed'});
+        }, 1500);
+    });
+    // o aluno rodou o programa (bandeira verde): o site libera o Verificar.
+    // Uma mudança ainda pendente vai antes, para o 'run' sempre valer para o projeto atual.
+    vm.on('PROJECT_RUN_START', () => {
+        if (changeTimer) {
+            clearTimeout(changeTimer);
+            changeTimer = null;
+            send({type: 'changed'});
+        }
+        send({type: 'run'});
     });
 
     window.addEventListener('message', async e => {
@@ -48,6 +61,17 @@ export const setupBridge = vm => {
             if (msg.type === 'hello') {
                 // o site começou a ouvir depois do nosso 'ready': avisa de novo
                 send({type: 'ready'});
+            } else if (msg.type === 'center') {
+                // o aluno perdeu o ator no palco: para tudo e põe cada ator de volta no lugar inicial (o código fica)
+                vm.stopAll();
+                for (const p of Array.isArray(msg.sprites) ? msg.sprites : []) {
+                    const t = vm.runtime.getSpriteTargetByName(String(p.name));
+                    if (!t) continue;
+                    t.setXY(Number(p.x) || 0, Number(p.y) || 0);
+                    t.setDirection(Number.isFinite(Number(p.direction)) ? Number(p.direction) : 90);
+                    if (p.visible !== false) t.setVisible(true);
+                }
+                vm.emitTargetsUpdate();
             } else if (msg.type === 'load') {
                 allowed = Array.isArray(msg.allowedBlocks) && msg.allowedBlocks.length ?
                     new Set(msg.allowedBlocks) : null;
