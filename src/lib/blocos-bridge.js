@@ -3,6 +3,7 @@
 // Mensagens enviadas: {type:'ready'}, {type:'loaded'}, {type:'project', id, sb3}, {type:'changed'}, {type:'error', message}.
 
 import {setStageSize} from '../reducers/stage-size';
+import {setFullScreen, setPlayer} from '../reducers/mode';
 import {STAGE_SIZE_MODES} from './layout-constants';
 
 let allowed = null; // null = todos os blocos
@@ -50,6 +51,11 @@ export const setupBridge = vm => {
             } else if (msg.type === 'load') {
                 allowed = Array.isArray(msg.allowedBlocks) && msg.allowedBlocks.length ?
                     new Set(msg.allowedBlocks) : null;
+                // modo jogar (jurado): só o palco, em tela cheia dentro do quadro
+                if (msg.player && window.ReduxStore) {
+                    window.ReduxStore.dispatch(setPlayer(true));
+                    window.ReduxStore.dispatch(setFullScreen(true));
+                }
                 await vm.loadProject(msg.sb3);
                 vm.setEditingTarget(vm.runtime.targets.find(t => !t.isStage)?.id || vm.runtime.getTargetForStage().id);
                 send({type: 'loaded'});
