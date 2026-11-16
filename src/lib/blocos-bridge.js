@@ -52,7 +52,34 @@ export const setupBridge = vm => {
             send({type: 'changed'});
         }
         send({type: 'run'});
+        hideDone();
     });
+
+    // tela verde de CONCLUÍDO sobre o palco (o site avisa quando a missão foi cumprida); some ao rodar de novo
+    let done = null;
+    let doneTimer = null;
+    const hideDone = () => {
+        clearTimeout(doneTimer);
+        if (done) done.remove();
+        done = null;
+    };
+    const showDone = () => {
+        const canvas = document.querySelector('canvas');
+        const box = canvas && canvas.parentElement;
+        if (!box) return;
+        hideDone();
+        done = document.createElement('div');
+        done.setAttribute('role', 'status');
+        done.style.cssText = 'position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;' +
+            'justify-content:center;gap:6px;background:linear-gradient(#15803d,#4ade80);color:#fff;font-family:system-ui,sans-serif;' +
+            'cursor:pointer;border-radius:inherit;text-align:center';
+        done.innerHTML = '<div style="font-size:clamp(20px,9cqw,52px);font-weight:800">CONCLUÍDO!</div>' +
+            '<div style="font-size:clamp(11px,4cqw,22px);font-weight:700">Missão cumprida!</div>';
+        box.style.position = box.style.position || 'relative';
+        box.style.containerType = 'inline-size';
+        done.addEventListener('click', hideDone);
+        box.appendChild(done);
+    };
 
     window.addEventListener('message', async e => {
         if (e.origin !== parentOrigin || !e.data || typeof e.data !== 'object') return;
@@ -61,6 +88,14 @@ export const setupBridge = vm => {
             if (msg.type === 'hello') {
                 // o site começou a ouvir depois do nosso 'ready': avisa de novo
                 send({type: 'ready'});
+            } else if (msg.type === 'concluido') {
+                // deixa o programa terminar e espera 1 s, para a criança ver o resultado antes de cobrir o palco
+                const later = () => {
+                    clearTimeout(doneTimer);
+                    doneTimer = setTimeout(showDone, 1000);
+                };
+                if (vm.runtime.threads.length) vm.runtime.once('PROJECT_RUN_STOP', later);
+                else later();
             } else if (msg.type === 'center') {
                 // o aluno perdeu o ator no palco: para tudo e põe cada ator de volta no lugar inicial (o código fica)
                 vm.stopAll();
@@ -71,8 +106,15 @@ export const setupBridge = vm => {
                     t.setDirection(Number.isFinite(Number(p.direction)) ? Number(p.direction) : 90);
                     if (p.visible !== false) t.setVisible(true);
                 }
+                // jogo recomeça do zero: variáveis (placar) em 0 e sai da tela de CONCLUÍDO
+                const stage = vm.runtime.getTargetForStage();
+                for (const v of Object.values(stage.variables)) if (v.type === '') v.value = 0;
+                const tela = stage.getCostumes()[stage.currentCostume];
+                if (tela && /^conclu/i.test(tela.name)) stage.setCostume(0);
+                hideDone();
                 vm.emitTargetsUpdate();
             } else if (msg.type === 'load') {
+                hideDone();
                 allowed = Array.isArray(msg.allowedBlocks) && msg.allowedBlocks.length ?
                     new Set(msg.allowedBlocks) : null;
                 // modo jogar (jurado): só o palco, em tela cheia dentro do quadro
