@@ -58,7 +58,9 @@ export const setupBridge = vm => {
     // tela verde de CONCLUÍDO sobre o palco (o site avisa quando a missão foi cumprida); some ao rodar de novo
     let done = null;
     let doneTimer = null;
+    let doneToken = 0;
     const hideDone = () => {
+        doneToken++;
         clearTimeout(doneTimer);
         if (done) done.remove();
         done = null;
@@ -90,12 +92,20 @@ export const setupBridge = vm => {
                 send({type: 'ready'});
             } else if (msg.type === 'concluido') {
                 // deixa o programa terminar e espera 1 s, para a criança ver o resultado antes de cobrir o palco
+                // jogos com "sempre" não terminam: mostra quando o programa para ou depois do tempo que a
+                // verificação precisou (msg.after), o que vier primeiro; rodar de novo cancela (hideDone)
+                const token = ++doneToken;
                 const later = () => {
+                    if (token !== doneToken) return;
+                    doneToken++;
                     clearTimeout(doneTimer);
                     doneTimer = setTimeout(showDone, 1000);
                 };
-                if (vm.runtime.threads.length) vm.runtime.once('PROJECT_RUN_STOP', later);
-                else later();
+                if (vm.runtime.threads.length) {
+                    vm.runtime.once('PROJECT_RUN_STOP', later);
+                    vm.runtime.once('PROJECT_STOP_ALL', later);
+                    doneTimer = setTimeout(later, Math.min(Math.max(Number(msg.after) || 5, 1), 60) * 1000);
+                } else later();
             } else if (msg.type === 'center') {
                 // o aluno perdeu o ator no palco: para tudo e põe cada ator de volta no lugar inicial (o código fica)
                 vm.stopAll();
