@@ -35,12 +35,30 @@ export const setupBridge = vm => {
     })();
     const send = msg => window.parent.postMessage(msg, parentOrigin);
 
+    // O projeto sem o que só muda jogando ou arrastando no palco (posição, direção, fantasia atual, visível, tamanho):
+    // arrastar um ator não é mudar o programa, e não pode travar o Verificar.
+    const signature = () => {
+        const p = JSON.parse(vm.toJSON());
+        for (const t of p.targets || []) {
+            for (const k of ['x', 'y', 'direction', 'currentCostume', 'visible', 'size', 'layerOrder']) delete t[k];
+            for (const v of Object.values(t.variables || {})) v[1] = 0;
+        }
+        delete p.monitors;
+        return JSON.stringify(p);
+    };
+    let lastSignature = null;
+    const flushChange = () => {
+        const s = signature();
+        if (s === lastSignature) return;
+        lastSignature = s;
+        send({type: 'changed'});
+    };
     let changeTimer = null;
     vm.on('PROJECT_CHANGED', () => {
         clearTimeout(changeTimer);
         changeTimer = setTimeout(() => {
             changeTimer = null;
-            send({type: 'changed'});
+            flushChange();
         }, 1500);
     });
     // o aluno rodou o programa (bandeira verde): o site libera o Verificar.
@@ -49,7 +67,7 @@ export const setupBridge = vm => {
         if (changeTimer) {
             clearTimeout(changeTimer);
             changeTimer = null;
-            send({type: 'changed'});
+            flushChange();
         }
         send({type: 'run'});
         hideDone();
@@ -69,6 +87,10 @@ export const setupBridge = vm => {
         const canvas = document.querySelector('canvas');
         const box = canvas && canvas.parentElement;
         if (!box) return;
+        // o jogo terminou na tela de fim (o jogador perdeu): não cobre com CONCLUÍDO
+        const stage = vm.runtime.getTargetForStage();
+        const tela = stage && stage.getCostumes()[stage.currentCostume];
+        if (tela && /fim/i.test(tela.name)) return;
         hideDone();
         done = document.createElement('div');
         done.setAttribute('role', 'status');
@@ -104,7 +126,10 @@ export const setupBridge = vm => {
                 if (vm.runtime.threads.length) {
                     vm.runtime.once('PROJECT_RUN_STOP', later);
                     vm.runtime.once('PROJECT_STOP_ALL', later);
-                    doneTimer = setTimeout(later, Math.min(Math.max(Number(msg.after) || 5, 1), 60) * 1000);
+                    // jogo com fim próprio (tem um bloco "pare"): a tela só aparece quando ele parar, sem cobrir quem ainda joga
+                    const endsItself = vm.runtime.targets.some(t =>
+                        Object.values(t.blocks._blocks).some(b => b.opcode === 'control_stop'));
+                    if (!endsItself) doneTimer = setTimeout(later, Math.min(Math.max(Number(msg.after) || 5, 1), 60) * 1000);
                 } else later();
             } else if (msg.type === 'center') {
                 // o aluno perdeu o ator no palco: para tudo e põe cada ator de volta no lugar inicial (o código fica)
@@ -133,6 +158,7 @@ export const setupBridge = vm => {
                     window.ReduxStore.dispatch(setFullScreen(true));
                 }
                 await vm.loadProject(msg.sb3);
+                lastSignature = signature();
                 vm.setEditingTarget(vm.runtime.targets.find(t => !t.isStage)?.id || vm.runtime.getTargetForStage().id);
                 send({type: 'loaded'});
             } else if (msg.type === 'getProject') {
