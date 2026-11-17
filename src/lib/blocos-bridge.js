@@ -87,10 +87,12 @@ export const setupBridge = vm => {
         const canvas = document.querySelector('canvas');
         const box = canvas && canvas.parentElement;
         if (!box) return;
-        // o jogo terminou na tela de fim (o jogador perdeu): não cobre com CONCLUÍDO
+        // jogo que dá para ganhar (tem cenário Concluído) e terminou na tela de fim: o jogador perdeu, não cobre com CONCLUÍDO.
+        // Jogo sem vitória (ex.: Cobrinha, joga-se até bater): a tela de fim é o final normal e a missão aparece cumprida.
         const stage = vm.runtime.getTargetForStage();
-        const tela = stage && stage.getCostumes()[stage.currentCostume];
-        if (tela && /fim/i.test(tela.name)) return;
+        const costumes = stage ? stage.getCostumes() : [];
+        const tela = costumes[stage ? stage.currentCostume : 0];
+        if (tela && /fim/i.test(tela.name) && costumes.some(c => /^conclu/i.test(c.name))) return;
         hideDone();
         done = document.createElement('div');
         done.setAttribute('role', 'status');
